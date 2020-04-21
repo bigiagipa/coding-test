@@ -10,6 +10,11 @@ class User extends Authenticatable
 {
     use Notifiable;
 
+    const GENDER      = [
+        'Male'  =>  1,
+        'Female'  =>  2
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
