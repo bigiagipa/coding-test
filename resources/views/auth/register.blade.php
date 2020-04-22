@@ -72,7 +72,7 @@
                                 {{ Form::selectYear('dob[year]', date('Y') - 3, date('Y') - 50, null, ['class' => 'form-control mr-3', 'placeholder' => 'Year']) }}
                             </div>
                             @error('dob')
-                                <span class="invalid-feedback" role="alert">
+                                <span class="invalid-feedback" role="alert" style="display:block">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror

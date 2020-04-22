@@ -54,19 +54,23 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         // Log::emergency(print_r($data, true));
-        // combine dob input and create date format
-        $dateInput = $data['dob']['year'].'-'.$data['dob']['month'].'-'.$data['dob']['date']; 
-        $this->dob = Carbon::createFromFormat('Y-m-d', $dateInput)->format('Y-m-d');
-        $data['dob'] = $this->dob;
-
-        return Validator::make($data, [
-            'telephone' => ['required', 'string', 'max:255', 'unique:users,telephone'],
+        
+        $rules = [
+            'telephone' => ['required', 'string', 'max:255', 'unique:users,telephone', 'regex:/^(?:\+62|\(0\d{2,3}\)|0)\s?(?:361|8[17]\s?\d?)?(?:[ -]?\d{3,4}){2,3}$/'],
             'firstname' => ['required', 'string', 'max:255'],
             'lastname'  => ['required', 'string', 'max:255'],
-            'dob'       => ['date'],
             'email'     => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password'  => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        ];
+
+        // combine dob input and create date format
+        if($data['dob']['year'] || $data['dob']['month'] || $data['dob']['date']) {
+            $this->dob = $data['dob']['year'].'-'.$data['dob']['month'].'-'.$data['dob']['date']; 
+            $data['dob'] = $this->dob;
+            $rules['dob'] = ['date'];
+        }
+
+        return Validator::make($data, $rules);
     }
 
     /**
