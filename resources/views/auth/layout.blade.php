@@ -45,7 +45,7 @@
                             </li>
                             @if (Route::has('register'))
                                 <li class="nav-item">
-                                    <router-link class="nav-link" to="/register">Register</router-link>
+                                    <a class="nav-link" href="/register">Register</a>
                                 </li>
                             @endif
                         @else
@@ -83,8 +83,8 @@
 
         <main class="py-4">
             <div id="content-wrapper">
-                {{-- @yield('content') --}}
-                <router-view></router-view>
+                @yield('content')
+                {{-- <router-view></router-view> --}}
             </div>
         </main>
     </div>

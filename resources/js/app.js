@@ -7,6 +7,14 @@
 require('./bootstrap');
 
 window.Vue = require('vue');
+import VueRouter from 'vue-router';
+import Loading from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/vue-loading.css';
+import moment from 'vue-moment';
+
+Vue.use(VueRouter);
+Vue.use(Loading);
+Vue.use(moment);
 
 /**
  * The following block of code may be used to automatically register your
@@ -20,6 +28,15 @@ window.Vue = require('vue');
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
 
 Vue.component('example-component', require('./components/ExampleComponent.vue').default);
+Vue.component('form-validation', require('./components/FormValidation.vue').default);
+
+const router = new VueRouter({
+    mode: 'history',
+    routes: [
+        { path: '/', name: 'welcome', component: require('./components/Welcome.vue').default },
+        { path: '/register', name: 'register', component: require('./components/auth/Register.vue').default },
+    ],
+});
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -29,4 +46,6 @@ Vue.component('example-component', require('./components/ExampleComponent.vue').
 
 const app = new Vue({
     el: '#app',
+    router,
+    components: { Loading, moment }
 });

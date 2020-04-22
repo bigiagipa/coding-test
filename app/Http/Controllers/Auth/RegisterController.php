@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Log;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class RegisterController extends Controller
 {
@@ -33,7 +37,7 @@ class RegisterController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
-    protected $dob = '';
+    protected $dob = null;
 
     /**
      * Create a new controller instance.
@@ -43,6 +47,29 @@ class RegisterController extends Controller
     public function __construct()
     {
         $this->middleware('guest');
+    }
+
+    /**
+     * Handle a registration request for the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function register(Request $request)
+    {
+        $this->validator($request->all())->validate();
+
+        event(new Registered($user = $this->create($request->all())));
+
+        // $this->guard()->login($user);
+
+        if ($response = $this->registered($request, $user)) {
+            return $response;
+        }
+
+        return response()->json([
+            'data' => 'success'
+        ]);
     }
 
     /**
@@ -56,21 +83,30 @@ class RegisterController extends Controller
         // Log::emergency(print_r($data, true));
         
         $rules = [
-            'telephone' => ['required', 'string', 'max:255', 'unique:users,telephone', 'regex:/^(?:\+62|\(0\d{2,3}\)|0)\s?(?:361|8[17]\s?\d?)?(?:[ -]?\d{3,4}){2,3}$/'],
-            'firstname' => ['required', 'string', 'max:255'],
-            'lastname'  => ['required', 'string', 'max:255'],
-            'email'     => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password'  => ['required', 'string', 'min:8', 'confirmed'],
+            'user.telephone' => ['required', 'string', 'max:255', 'unique:users,telephone', 'regex:/^(?:\+62|\(0\d{2,3}\)|0)\s?(?:361|8[17]\s?\d?)?(?:[ -]?\d{3,4}){2,3}$/'],
+            'user.firstname' => ['required', 'string', 'max:255'],
+            'user.lastname'  => ['required', 'string', 'max:255'],
+            'user.email'     => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            // 'user.password'  => ['required', 'string', 'min:8', 'confirmed'],
+        ];
+        
+        $attributeLabels = [
+            'user.telephone' => 'Mobile number', 
+            'user.firstname' => 'First name', 
+            'user.lastname'  => 'Last name', 
+            'user.email'     => 'Email',
+            'dob'           => 'Date of birth',
+            'user.gender'     => 'Date of gender',
         ];
 
         // combine dob input and create date format
-        if($data['dob']['year'] || $data['dob']['month'] || $data['dob']['date']) {
-            $this->dob = $data['dob']['year'].'-'.$data['dob']['month'].'-'.$data['dob']['date']; 
+        if($data['user']['dob']['year'] || $data['user']['dob']['month'] || $data['user']['dob']['date']) {
+            $this->dob = $data['user']['dob']['year'].'-'.$data['user']['dob']['month'].'-'.$data['user']['dob']['date']; 
             $data['dob'] = $this->dob;
             $rules['dob'] = ['date'];
         }
 
-        return Validator::make($data, $rules);
+        return Validator::make($data, $rules)->setAttributeNames($attributeLabels);
     }
 
     /**
@@ -84,13 +120,13 @@ class RegisterController extends Controller
         // Log::emergency(print_r($data, true));
 
         return User::create([
-            'telephone' => $data['telephone'],
-            'firstname' => $data['firstname'],
-            'lastname'  => $data['lastname'],
-            'email'     => $data['email'],
-            'gender'    => $data['gender'],
+            'telephone' => $data['user']['telephone'],
+            'firstname' => $data['user']['firstname'],
+            'lastname'  => $data['user']['lastname'],
+            'email'     => $data['user']['email'],
+            'gender'    => $data['user']['gender'],
             'dob'       => $this->dob,
-            'password'  => Hash::make($data['password']),
+            'password'  => Hash::make(Str::random(10)),
         ]);
     }
 }
