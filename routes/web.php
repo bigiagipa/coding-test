@@ -21,3 +21,10 @@ Auth::routes();
 
 Route::get('/', 'HomeController@index')->name('home');
 Route::get('/home', 'HomeController@index')->name('dashboard');
+
+Route::get('/users', 'HomeController@index')->name('users');
+
+
+Route::get('image-upload', 'ImageManipulationController@imageUpload')->name('image.upload');
+
+Route::post('image-upload', 'ImageManipulationController@imageUploadPost')->name('image.upload.post');
