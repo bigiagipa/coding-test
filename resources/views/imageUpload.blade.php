@@ -31,7 +31,19 @@
                 
             @endif
 
-                <img id="original-image" src="images/1591082157.jpg">
+                <div style="display:-webkit-inline-box">
+                    <img id="original-image1" src="images/1591082157.jpg">
+
+                    <div id="canvas-image1"></div>
+                </div>
+                
+                <br/>
+
+                <div style="display:-webkit-inline-box">
+                    <img id="original-image2" src="images/1592405631.jpg">
+
+                    <div id="canvas-image2"></div>
+                </div>
                 
                 <br/>
 
@@ -206,6 +218,8 @@
         }
 
         function manipulateImage2(imgPath) {
+            var id = 1;
+            var rgbLowerLimit = 200;
             $("img").each(function() {
                 var $this = $(this);
                 var tim = $this.get(0);
@@ -223,6 +237,7 @@
                 function copyImageToCanvas(aImg) {
                     canvas = document.createElement("canvas");
 
+                    // naturalWidth : Return the original width of an image
                     var w = typeof aImg.naturalWidth == "undefined" ? aImg.width : aImg.naturalWidth;
                     var h = typeof aImg.naturalHeight == "undefined" ? aImg.height : aImg.naturalHeight;
 
@@ -230,7 +245,10 @@
                     canvas.width = w;
                     canvas.height = h;
 
-                    $this.replaceWith(canvas);
+                    // $this.replaceWith(canvas);
+                    $("#canvas-image" + id).append(canvas);
+                    console.log(id);
+                    id++;
 
                     ctx = canvas.getContext("2d");
                     ctx.clearRect(0, 0, w, h);      
@@ -245,19 +263,61 @@
                     var h = typeof aImg.naturalHeight == "undefined" ? aImg.height : aImg.naturalHeight;
                     var imageData = ctx.getImageData(0, 0, w, h);
 
-                    for (var x = 0; x < imageData.width; x++)
-                        for (var y = 0; y < imageData.height; y++) {
+                    start:
+                    // scan y from top and from bottom
+                    for (var x = 0; x < imageData.width; x++) {
+                        scanY(true, imageData, x);
+                        scanY(false, imageData, x);
+                    }
+
+                    // scan x from left and from right
+                    for (var y = 0; y < imageData.height; y++) {
+                        scanX(true, imageData, y);
+                        scanX(false, imageData, y);
+                    }
+
+                    ctx.putImageData(imageData, 0, 0);
+                    
+                }
+
+                scanY = function (fromTop, imageData, x) {
+
+                    for (var y = fromTop ? 0 : imageData.height - 1 ; fromTop ? (y < imageData.height) : y > -1; fromTop ? y++ : y--) {
                             var offset = (y * imageData.width + x) * 4;
                             var r = imageData.data[offset];
                             var g = imageData.data[offset + 1];
                             var b = imageData.data[offset + 2];
 
                             //if it is pure white, change its alpha to 0              
-                            if (r >= 255 && g == 255 && b == 255)
+                            if (r >= rgbLowerLimit && g >= rgbLowerLimit && b >= rgbLowerLimit) {
                                 imageData.data[offset + 3] = 0;
+                            } else {
+                                // imageData.data[offset] = 0;
+                                // imageData.data[offset + 1] = 0;
+                                // imageData.data[offset + 2] = 255;
+                                // console.log(x + ' == ' + r + ', ' + g + ', ' + b);
+                                // stop = true;
+                                // break;
+                                return;
+                            }
                         };
+                }
 
-                    ctx.putImageData(imageData, 0, 0);
+                scanX = function (fromLeft, imageData, y) {
+
+                    for (var x = fromLeft ? 0 : imageData.width - 1 ; fromLeft ? (x < imageData.width) : x > -1; fromLeft ? x++ : x--) {
+                            var offset = (y * imageData.width + x) * 4;
+                            var r = imageData.data[offset];
+                            var g = imageData.data[offset + 1];
+                            var b = imageData.data[offset + 2];
+
+                            //if it is pure white, change its alpha to 0              
+                            if (r >= rgbLowerLimit && g >= rgbLowerLimit && b >= rgbLowerLimit) {
+                                imageData.data[offset + 3] = 0;
+                            } else {
+                                return;
+                            }
+                        };
                 }
             });
         }
